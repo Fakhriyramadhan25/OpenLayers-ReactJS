@@ -61,7 +61,7 @@ const AttQuery = () => {
   return (
     <>
     <Button onClick={onOpen} p="2px" colorScheme='blue'><FaFilterCircleXmark size="30" color='white'/></Button>
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} >
       <ModalOverlay/>
       <ModalContent>
         <ModalHeader bg="blue.200">
@@ -226,10 +226,11 @@ function MapWrapper() {
 
     // layer switcher widget 
     const layerSwitcher = new LayerSwitcher({
-      reverse: false,
+      reverse: true,
       groupSelectStyle: 'group',
       activationMode: 'click',
-      startActive: false
+      startActive: false,
+      tipLabel: 'Legend',
     })
 
     // for scalebar widget
@@ -363,9 +364,9 @@ function MapWrapper() {
     <Box>
       <Box borderRadius="40px" ref={mapElement} className="map-container" z-index="0">
       </Box>
-      <VStack position="absolute" spacing="20px" top="135px" z-index="1" ml="10px">
+      <VStack position="absolute" spacing="20px" top="140px" z-index="1" ml="20px">
         <Button p="2px" colorScheme='blue' onClick={()=> lessZoom(map)}><MdInfo size="30px" color='white'/></Button>
-        <Button p="2px" colorScheme='blue' onClick={()=>handleHome(map)}><TbBrandGoogleMaps size="30px" color='white'/></Button>
+        <Button p="2px" colorScheme='blue' onClick={()=> handleHome(map)}><TbBrandGoogleMaps size="30px" color='white'/></Button>
         <Button p="2px" colorScheme='blue' ref={contFullscreen} ><MdZoomOutMap size="30px" color='white'/></Button>
         <AttQuery/>
       </VStack>

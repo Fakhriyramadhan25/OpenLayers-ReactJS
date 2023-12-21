@@ -1,6 +1,6 @@
 
 .map-container{
-  height: 100vh;
+  height: 89vh;
   width: 100%;
 }
 
@@ -62,4 +62,11 @@
 .widgetFullScreen{
   opacity: 0%;
   padding: 10px;
+}
+
+.map-container .layer-switcher{
+  top: 10px;
+  left: 19px;
+  right: auto;
+  
 }
