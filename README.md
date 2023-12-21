@@ -1,8 +1,24 @@
-#
+# Dashboard: Estimated value of damage caused by natural disasters
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Description
 
-Currently, two official plugins are available:
+This dashboard serves the function of calculating
+and estimating the lost value of a damage caused by natural disasters.
+It takes houses, building, and road into the parameter of calculation.
+To makes sure, there is a limitation in acquiring data.
+Therefore, the scale of Area of Interest (AOI) should be adjusted
+for big cities will be small while for rural area could be larger as there
+are less data.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Technology
+
+The main technology use for this dashboard as follows:
+
+1. OpenLayers
+2. GeoServer
+3. Overpass Turbo
+4. PostgreSQL
+5. JWT Auth
+6. GEE
+
+### Visualization of the web apps
