@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import $ from "jquery";
 
 // openlayers
@@ -6,28 +6,25 @@ import Map from 'ol/Map'
 import View from 'ol/View'
 import TileLayer from 'ol/layer/Tile'
 import OSM from 'ol/source/OSM';
-import { fromLonLat, toLonLat} from 'ol/proj';
+import { fromLonLat} from 'ol/proj';
 import TileWMS from 'ol/source/TileWMS.js';
 import LayerSwitcher from 'ol-layerswitcher';
 import Group from 'ol/layer/Group';
 import MousePosition from 'ol/control/MousePosition';
-import {closestOnCircle, format, toStringHDMS} from 'ol/coordinate';
+import {format} from 'ol/coordinate';
 import ScaleLine from 'ol/control/ScaleLine';
 import Overlay  from 'ol/Overlay';
-import FullScreen from 'ol/control/FullScreen';
-import axios from 'axios';
 import VectorLayer from 'ol/layer/Vector.js';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON.js';
 import {bbox} from 'ol/loadingstrategy';
 import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
-import WFS from 'ol/format/WFS';
-import {or, like } from 'ol/format/filter';
-import SelectInteraction from 'ol/interaction/Select';
 import Fill from 'ol/style/Fill';
-import {singleClick} from 'ol/events/condition';
-
+import Draw from 'ol/interaction/Draw';
+import XYZ from 'ol/source/XYZ';
+import { MapsContext } from '../context/MapsContext';
+import AttQuery from './AttQuery';
 
 
 // css for openlayers 
@@ -35,75 +32,11 @@ import 'ol/ol.css';
 import 'ol-layerswitcher/dist/ol-layerswitcher.css';
 
 // chakra ui 
-import { Box, Button, FormControl, FormLabel, Select, VStack, 
-  useDisclosure, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, 
-  ModalBody, ModalFooter, Modal } from '@chakra-ui/react';
-import {TbBrandGoogleMaps} from 'react-icons/tb';
-import {MdInfo, MdZoomOutMap} from 'react-icons/md';
-import {FaFilterCircleXmark} from 'react-icons/fa6';
-
-const AttQuery = () => {
-  const {isOpen, onOpen, onClose} = useDisclosure();
-  const [dataUS, setDataUS] = useState();
-
-  useEffect(()=>{
-    axios.get("http://localhost:8080/geoserver/wfs?request=getCapabilities", {
-        "Content-Type": "application/xml; charset=utf-8",
-      })
-    .then((res)=>{
-    const dataXML = $(res.data).find('FeatureType Name').text();
-    })
-    .catch((error)=>{console.log(error)})
-
-  },[])
-
-
-  return (
-    <>
-    <Button onClick={onOpen} p="2px" colorScheme='blue'><FaFilterCircleXmark size="30" color='white'/></Button>
-    <Modal isOpen={isOpen} onClose={onClose} >
-      <ModalOverlay/>
-      <ModalContent>
-        <ModalHeader bg="blue.200">
-        Attribute Query
-        </ModalHeader> 
-        <ModalCloseButton/>
-        <ModalBody>
-          <VStack spacing="20px">
-          <FormControl >
-              <FormLabel> Select Layer</FormLabel>
-              <Select id="selectLayer"></Select>
-          </FormControl>
-          <FormControl>
-              <FormLabel> Select Attribute</FormLabel>
-              <Select></Select>
-          </FormControl>
-          <FormControl>
-              <FormLabel> Select Operator</FormLabel>
-              <Select></Select>
-          </FormControl>
-          <FormControl>
-              <FormLabel> Select Value</FormLabel>
-              <Select></Select>
-          </FormControl>
-       
-          </VStack>
-     
-        </ModalBody>
-
-        <ModalFooter>
-           <Button colorScheme='blue' mr={3} >Run</Button>
-           <Button onClick={onClose} colorScheme='gray'>close</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  </>
-  );
-}
+import { Box, Button, VStack, Text} from '@chakra-ui/react';
+import { FaDrawPolygon } from "react-icons/fa";
 
 
 function MapWrapper() {
-
   // set intial state
   const [map, setMap] = useState();
 
@@ -115,9 +48,65 @@ function MapWrapper() {
   const content = useRef();
   const closer = useRef();
 
-  // ref for fullscreen 
-  const contFullscreen = useRef();
 
+  // draw switching button 
+  const drawSwitch = useRef();
+  const drawOff = useRef("");
+  const [indiSwitch, setIndiSwitch] = useState(false);
+
+  //testing 
+  const [drawActive, setDrawActive] = useState(false);
+
+  // this is the function to activate and deactivate drawing tools
+  const handleDraw = () => {
+    // Change opposite from true to false and so forth 
+    setDrawActive(data=>!data);
+  }
+
+  // callback function for drawing polygon button
+  const handleCall = useCallback((maps, rectangleDraw)=>{
+    if(drawActive === true ){
+      maps.addInteraction(rectangleDraw);
+    }
+    else if (drawActive === false) {
+      maps.removeInteraction(rectangleDraw);
+    }
+    else {
+      console.log("Error")
+    }
+
+  },[drawActive])
+
+  // this is the variable for using the map context
+  const urlContext = useContext(MapsContext);
+
+  // function to add new wfs from the query attribute
+  const queryWFS = (urlWFS) => {
+    const querySource = new VectorSource({
+      url:()=>{return (urlWFS);},
+      format: new GeoJSON(),
+      attributions: '@geoserver',
+      strategy: bbox,
+    })
+
+    // the first vector layer of water areas in Darwin 
+    const queryVector = new VectorLayer({
+      title: "Filtered Layers",
+      source: querySource,
+      style: new Style({
+        fill: new Fill({
+          color: '#8f2929'
+        }),
+        stroke: new Stroke({
+          color: 'rgba(0, 0, 255, 1.0)',
+          width: 2,
+        }),
+      }),
+    })
+
+    return queryVector;
+
+  }
 
   // initialize map on first render - logic formerly put into componentDidMount
   useEffect( () => {
@@ -126,6 +115,14 @@ function MapWrapper() {
       center: fromLonLat([-102.93252,42.09808]),
       zoom: 4
     })
+
+    const drawSource = new VectorSource({wrapX:false});
+    
+    const drawVector = new VectorLayer({
+      title: "Drawing",
+      source: drawSource,
+      transition: 1
+    });
 
     const usPops = new TileLayer({
       title:"Distribution of USA Population",
@@ -156,7 +153,6 @@ function MapWrapper() {
       format: new GeoJSON(),
       attributions: '@geoserver',
       strategy: bbox,
-      
     })
 
     // the first vector layer of water areas in Darwin 
@@ -174,49 +170,42 @@ function MapWrapper() {
       }),
     })
 
-    // Vector layer with filter 
-    const AusSource = new VectorSource();
+    // this is a basemap for OSM
+    const OSMBase = new TileLayer({
+      title: 'OSM',
+      type: 'base',
+      visible: true,
+      source: new OSM(),
+    })
 
-    const AusCountry = new WFS().writeGetFeature({
-      srsName: 'EPSG:3857',
-      featureNS: '',
-      featurePrefix: 'ne',
-      featureTypes: ['countries'],
-      outputFormat: 'json',
-      filter: or(
-        like('NAME', 'Australia*'),
-        like('NAME', 'China*')
-  ),
-    });
+    // this is a basemap for earth satelite 
+    const earthBase = new TileLayer({
+      title: 'Satellite',
+      type: 'base',
+      visible: false,
+      source: new XYZ({
+        attributions: ['Powered by Esri',
+        'Source: Esri, DigitalGlobe, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community'
+        ],
+        attributionsCollapsible: false,
+        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        maxZoom: 23
+      })
+    })
 
-
-  fetch('http://localhost:8080/geoserver/wfs', {
-  method: 'POST',
-  body: new XMLSerializer().serializeToString(AusCountry)
-  }).then(function(response) {
-    return response.json();
-  }).then(function(json) {
-    var features = new GeoJSON().readFeatures(json);
-    console.log(features);
-    AusSource.addFeatures(features);
-    initialMap.getView().fit(AusSource.getExtent());
-}).catch((error)=>{
-  console.log(error);
-});
-
-
-    const AusLayer = new VectorLayer({
-      title: "2 Countries",
-      source: AusSource,
+    // basemap group 
+    const groupBasemap = new Group({
+      title: 'Basemap Option',
+      layers: [OSMBase, earthBase]
     })
 
     // compile all the tile layers 
     const groupTileLayer = new Group({
       title: "Population Layers",
-      layers: [ cityPops, usPops]
+      layers: [ cityPops, usPops, firstVector, drawVector]
     })
 
-    // this is only for control of the maps 
+    ////// this is only for control of the maps 
     // This is the mouse position 
     const mousePosition = new MousePosition({
       projection: 'EPSG:4326',
@@ -256,51 +245,34 @@ function MapWrapper() {
       return false;
     };
 
-    // fullscreen widget 
-    const wFullscreen = new FullScreen({
-      target: contFullscreen.current,
-      className: "widgetFullScreen"
-    });
+    // rectangle draw 
+    const rectangleDraw = new Draw({
+      source: drawSource,
+      type: 'Polygon',
+    });  
+    // rectangle draw
+
+    // trial for creating button that can activate and deactivate itself 
+    
+      drawSwitch.current.onclick = function () {
+      initialMap.addInteraction(rectangleDraw);
+      }
+ 
+      drawOff.current.onclick = function () {
+        initialMap.removeInteraction(rectangleDraw);
+      }
+
 
     // // this is the get feature vector layer section 
-    // this is the style for the select variable 
-    const selected = new Style({
-      fill: new Fill({
-        color: '#eeeeee'
-      }),
-      stroke: new Stroke({
-        color: 'rgba(255, 255, 255, 0.4)',
-        width: 2,
-      })
-    });
-
-    // this is the set for the style and color 
-    const selectStyle = () => {
-      const color = feature.get('COLOR') || '#eeeeee';
-      selected.getFill().setColor(color);
-      return selected;
-    }
-
-
-    // get feature info from the vector layer
-    const handleSelect = new SelectInteraction({
-      condition: singleClick,
-      style: selectStyle
-    });
-
-
     // create map
     const initialMap = new Map({
       target: mapElement.current,
-      layers: [new TileLayer({
-        source: new OSM(),
-      }), groupTileLayer, firstVector
+      layers: [ groupBasemap, groupTileLayer
       ],
       view: ViewMap,
-      controls: [layerSwitcher, mousePosition, Scala, wFullscreen],
+      controls: [layerSwitcher, mousePosition, Scala],
       overlays: [popup]
     });
-
 
 
     // add a click handler to the map to render the popup
@@ -326,61 +298,73 @@ function MapWrapper() {
       else{
         popup.setPosition(undefined);
       }
-      // const coordinate = e.coordinate;
-      // const hdms = toStringHDMS(toLonLat(coordinate));
-
-      // content.current.innerHTML = '<p>You clicked here:</p><code>' + hdms + '</code>';
-      // popup.setPosition(coordinate);
     })
-  
-    // save map and vector layer references to state
-    initialMap.addLayer(AusLayer);
-    // add a click handler to the map to render the popup 
-    initialMap.addInteraction(handleSelect);
 
+    // // customize drawing polygon feature 
+    // this is a rectangle shape drawing 
+        async function addInteractions(){
+          const rectangleDraw = new Draw({
+            source: drawSource,
+            type: 'Polygon',
+          });  
+          handleCall(initialMap, rectangleDraw);
+      }
+  
+    // add a click handler to the map to render the popup 
     setMap(initialMap);
 
-    return () => initialMap.setTarget(null);
-  },[]);
+    // adding control/layer/filter widgets 
+    initialMap.addLayer(queryWFS(urlContext.mapURL));
+    addInteractions();
+    
+    return () => initialMap.setTarget();
+  },[urlContext.mapURL, handleCall]);
 
-  
-  const lessZoom = (map) => {
-    const view = map.getView();
-    const currentZoom = view.getZoom()
-    const newZoom = currentZoom - 0.5;
-    view.setZoom(newZoom);
-  };
-
-  const handleHome = (map) => {
-    const view = map.getView();
-    const newCenter =  fromLonLat([-100.93252,38.09808]);
-    view.setCenter(newCenter);
-
+  const turnOnSwitch = () => {
+    setIndiSwitch(true);
   }
 
-
+  const turnOffSwitch = () => {
+    setIndiSwitch(false);
+  }
+ 
   // render component
   return (
     <Box>
       <Box borderRadius="40px" ref={mapElement} className="map-container" z-index="0">
       </Box>
-      <VStack position="absolute" spacing="20px" top="140px" z-index="1" ml="20px">
-        <Button p="2px" colorScheme='blue' onClick={()=> lessZoom(map)}><MdInfo size="30px" color='white'/></Button>
-        <Button p="2px" colorScheme='blue' onClick={()=> handleHome(map)}><TbBrandGoogleMaps size="30px" color='white'/></Button>
-        <Button p="2px" colorScheme='blue' ref={contFullscreen} ><MdZoomOutMap size="30px" color='white'/></Button>
+      <VStack position="absolute" spacing="20px" top="150px" z-index="1" ml="20px">
         <AttQuery/>
+        <Button colorScheme='blue' p="2px" onClick={handleDraw} > <FaDrawPolygon size="30px" color="white"/></Button>
+        <Button colorScheme='green' p='2px' ref={drawSwitch} onClick={turnOnSwitch}>On</Button>
+        {/* {indiSwitch === false ?   
+        (<Box ref={drawOff} >
+        </Box>) 
+        :
+        (<Button colorScheme='red' p='2px' ref={drawOff} onClick={turnOffSwitch}>
+          Off
+        </Button>)} */}
+
+        <Button colorScheme='red' p='2px' ref={drawOff} >
+          Off
+        </Button>
+       
+
+        <Box>
+          <Text >
+            
+          </Text>
+        </Box>
       </VStack>
 
       <Box ref={container} className='ol-popup'>
         <a href='#' className='ol-popup-closer' ref={closer}></a>
         <Box ref={content}></Box>
       </Box>
-
-   
-      
     </Box>
   ) 
 
 }
 
 export default MapWrapper
+

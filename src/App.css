@@ -60,7 +60,7 @@
 }
 
 .widgetFullScreen{
-  opacity: 0%;
+  opacity: 100%;
   padding: 10px;
 }
 
@@ -68,5 +68,5 @@
   top: 10px;
   left: 19px;
   right: auto;
-  
 }
+

@@ -11,6 +11,7 @@ import MapWrapper from './pages/MapWrapper';
 import RootLayout from './layout/RootLayout';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
+import { MapContextProvider } from './context/MapsContext';
 
 
 function App() {
@@ -26,7 +27,9 @@ function App() {
   )
 
   return (
+    <MapContextProvider>
     <RouterProvider router={router} />
+    </MapContextProvider>
   )
 }
 
