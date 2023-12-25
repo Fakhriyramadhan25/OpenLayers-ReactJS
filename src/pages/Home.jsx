@@ -1,8 +1,9 @@
 import React from 'react';
 import '../app.css';
 import Logo from '../img/spadelogo.jpg';
+import TravellingAsset from '../img/travelling.png';
 
-import { Stack, Flex, Box, Heading, Text, HStack} from '@chakra-ui/react';
+import { Stack, Flex, Box, Heading, Text, HStack, Image} from '@chakra-ui/react';
 import { NavLink } from 'react-router-dom';
 
 const Feature = ({title, rest, desc}) => {
@@ -25,9 +26,12 @@ const Feature = ({title, rest, desc}) => {
 const Home = () => {
 
   return (
-    <Box h='90vh'> 
+    <Box>
+     <Box boxSize="lg" position='absolute' className='travellingAsset' mt="50px" ml="60px">
+      <img src={TravellingAsset} alt='Travelling Asset animation' />
+     </Box>
     <Flex bgColor='blue.100' minH='100vh'>
-      <Stack spacing={8} direction='row' mx='auto' mt="15%">
+      <Stack spacing={8} direction='row' mx='auto' mt="15%" className='whiteBox'>
         <Feature title='Spatially Design'
         desc='Geo-dashboard using Openlayers Library'
         buttonName="let's Start"/>
