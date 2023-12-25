@@ -15,7 +15,7 @@ The main technology use for this dashboard as follows:
 ### Visualization of the web apps
 
 ![Result1](/src/img/res1.png)
-![Result2](/src/img/res2png)
+![Result2](/src/img/res2.png)
 ![Result3](/src/img/res3.png)
 ![Result4](/src/img/res4.png)
 ![Result5](/src/img/res5.png)
