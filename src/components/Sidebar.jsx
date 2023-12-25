@@ -1,7 +1,6 @@
 import React from 'react';
 import {List,ListItem, ListIcon, Text} from '@chakra-ui/react';
 import { NavLink } from 'react-router-dom';
-import { HamburgerIcon } from '@chakra-ui/icons';
 import {FaHome} from 'react-icons/fa';
 import {SiGooglemaps} from 'react-icons/si';
 
@@ -30,14 +29,7 @@ const Sidebar = () => {
           
         </NavLink>
       </ListItem>
-      <ListItem>
-        <NavLink to="dashboard">
-          <ListIcon as={HamburgerIcon} color="white" w={10} boxSize={6}/>
-          <Text fontSize='lg' as='b' color="white">
-          DASHBOARD
-          </Text>
-        </NavLink>
-      </ListItem>
+
     </List>
    
     </>

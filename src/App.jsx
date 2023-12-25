@@ -9,7 +9,6 @@ import {
 // components
 import MapWrapper from './pages/MapWrapper';
 import RootLayout from './layout/RootLayout';
-import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import { MapContextProvider } from './context/MapsContext';
 
@@ -21,7 +20,6 @@ function App() {
       <Route path="/" element={<RootLayout/>}>
         <Route index element={<Home/>}/>
         <Route path="maps" element={<MapWrapper/>}/>
-        <Route path="dashboard" element={<Dashboard/>}/>
       </Route>
     )
   )

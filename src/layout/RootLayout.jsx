@@ -1,10 +1,9 @@
-import { Grid, GridItem, Collapse, Button } from "@chakra-ui/react";
+import { Grid, GridItem, Button } from "@chakra-ui/react";
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
 import { DragHandleIcon } from "@chakra-ui/icons";
 
 // component 
-import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 
 
@@ -17,7 +16,7 @@ const RootLayout = () => {
     setActivate(!activate)
     if(activate === false){
       setCssWidth("250px");
-      setCssRight("215px");
+      setCssRight("250px");
     }
     else if(activate === true){
       setCssRight("0px");
@@ -28,33 +27,32 @@ const RootLayout = () => {
   return (
    <>
     <Grid templateColumns="repeat(6,1fr)" bg="white" h='100vh'>
-      <Button w={4} bg='blue.500' color='white' position='fixed' 
-      top='3%' right='4%' onClick={handleClick} borderRadius='xl'
+      <Button w={4} bg='white' color='blue.500' position='fixed' 
+      top='2.9%' right='5%' onClick={handleClick} borderRadius='xl'
       _hover={{
-        background: "white",
-        color: "blue.800",
+        background: "blue.800",
+        color: "white",
       }}>
         
         <DragHandleIcon boxSize={6}/>
       </Button>
+
       {activate === true ? 
       (
       <GridItem as="aside" z-index='2' 
       minHeight={{lg:'100vh'}} p={{base:'20px', lg:'30px'}}
-      bg="blue.400" position='absolute'
+      bg="blue.400" position='absolute' width={cssWidth}
       >
         <Sidebar/>
       </GridItem> 
       ) : ""}
- 
-      
-
+    
       <GridItem as="main" 
       z-index='1'
       colSpan={{ base: 6, lg: 4, xl: 6 }} 
       ml={cssRight}
      >
-        <Navbar/>
+       
       <Outlet />
       </GridItem>
       

@@ -13,7 +13,7 @@ import 'ol-layerswitcher/dist/ol-layerswitcher.css';
 // chakra ui 
 import { Button, FormControl, FormLabel, Select, VStack, 
   useDisclosure, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, 
-  ModalBody, ModalFooter, Modal, Text, Input } from '@chakra-ui/react';
+  ModalBody, ModalFooter, Modal, FormHelperText, Input, FormErrorMessage } from '@chakra-ui/react';
 import {FaFilterCircleXmark} from 'react-icons/fa6';
 
 
@@ -127,7 +127,7 @@ function AttQuery() {
       resetOperator();
     }
 
-
+    const isError = state.dataValue === ''
 
   return (
     <>
@@ -139,12 +139,14 @@ function AttQuery() {
         Attribute Query
         </ModalHeader> 
         <ModalCloseButton/>
+        <form>
         <ModalBody>
           <VStack spacing="20px">
-          <form>
+         
           <FormControl >
               <FormLabel> Select Layer</FormLabel>
               <Select name="dataLayer" value={state.dataLayer} onChange={(e)=>addOperator(e)}>
+              <option selected="true" disabled="disabled" value="">Choose Layer</option>    
                 {fetchLayer && fetchLayer.map((data, index)=>
                 {return (
                   <option key={index}>{data}</option>
@@ -155,6 +157,7 @@ function AttQuery() {
           <FormControl>
               <FormLabel> Select Attribute</FormLabel>
               <Select name="dataAtt" value={state.dataAtt} onChange={(e)=>addOperator(e)}>
+              <option selected="true" disabled="disabled" value="">Choose Attribute</option>    
               {fetchAtt && fetchAtt.map((data, index)=>{
                 return (
                   <option key={index} value={data}>{data}</option>
@@ -165,6 +168,7 @@ function AttQuery() {
           <FormControl>
               <FormLabel> Select Operator</FormLabel>
               <Select name="dataOperator" value={state.dataOperator} onChange={(e)=>addOperator(e)}>
+              <option selected="true" disabled="disabled" value="">Choose Operator</option>    
                 {OperatorOption.map((data)=>{
                   return (
                     <option key={data.label} value={data.value}>{data.label}</option>
@@ -172,12 +176,18 @@ function AttQuery() {
                 })}
               </Select>
           </FormControl>
-          <FormControl>
+          <FormControl isInvalid={isError}>
               <FormLabel> Select Value</FormLabel>
-              <Input name="dataValue" value={state.dataValue} onChange={(e)=>addOperator(e)} />
-
+              <Input name="dataValue" value={state.dataValue} onChange={(e)=>addOperator(e)}/>
+              {!isError ? (
+                <FormHelperText>
+                  Enter the value number directly and string with single quotation
+                </FormHelperText>
+              ) : (
+                <FormErrorMessage>Value is required.</FormErrorMessage>
+              )}
           </FormControl>
-          </form>
+          
           </VStack>
      
         </ModalBody>
@@ -186,8 +196,8 @@ function AttQuery() {
            <Button colorScheme='blue' mr={3} onClick={runQuery}>Run</Button>
            <Button onClick={onClose} colorScheme='gray'>close</Button>
            
-           <Text></Text>
         </ModalFooter>
+        </form>
       </ModalContent>
     </Modal>
   </>
